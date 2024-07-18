@@ -17,7 +17,7 @@ public class ParticlesController : MonoBehaviour
     {
         for(var i = 0 ; i < particles.Length; i++)
         {
-            if (lvl % i == 0)
+            if (lvl % (i + 1) == 0)
             {
                 particles[i].Play();
             }
