@@ -183,7 +183,6 @@ public class LuckySnapCapController : MonoBehaviour
             if (currentLevel == MaxLevel)
             {
                 MaxLevel++;
-                ScoreLast = ScoreLast + score;
             }
         }
         else
@@ -197,8 +196,9 @@ public class LuckySnapCapController : MonoBehaviour
         winContent.SetActive(isWin);
         loseContent.SetActive(!isWin);
         
+        ScoreLast = isWin? ScoreLast + score : 0;
         score = 0;
-
+        
 
         if (isWin && ScoreLast > BestScore)
         {
