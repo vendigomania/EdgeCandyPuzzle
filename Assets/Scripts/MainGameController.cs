@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LuckySnapCapController : MonoBehaviour
+public class MainGameController : MonoBehaviour
 {
     [SerializeField] private GameObject startScreen;
     [SerializeField] private TMP_Text startLvlLable;
@@ -14,6 +14,7 @@ public class LuckySnapCapController : MonoBehaviour
     [SerializeField] private TMP_Text movesLable;
     [SerializeField] private TMP_Text scoreLable;
     [SerializeField] private Image progressFill;
+    [SerializeField] private GameObject screenBlock;
 
     [SerializeField] private GameObject endScreen;
     [SerializeField] private GameObject loseContent;
@@ -22,10 +23,8 @@ public class LuckySnapCapController : MonoBehaviour
     [SerializeField] private TMP_Text endScoreLable;
     [SerializeField] private TMP_Text endBestLable;
 
-
-    [SerializeField] private Transform visualizatorsRoot;
-
-    private PointVisualizator[] visualizators;
+    [SerializeField] private BallGenerator board;
+    [SerializeField] private PointsConnector pointsConnector;
 
     private int MaxLevel
     {
@@ -53,14 +52,11 @@ public class LuckySnapCapController : MonoBehaviour
 
     void Start()
     {
-        PointVisualizator.OnSequenceFinish += OnSequenceFinish;
+        float coeff = ((float)Screen.height / Screen.width / (1920f / 1080f));
+        Camera.main.orthographicSize = 9 * coeff;
 
-        visualizators = new PointVisualizator[49];
-        visualizators[0] = visualizatorsRoot.GetComponentInChildren<PointVisualizator>();
-        for(int i = 1; i < visualizators.Length; i++)
-        {
-            visualizators[i] = Instantiate(visualizators[0], visualizatorsRoot);
-        }
+        pointsConnector.OnLineEnd += OnLineFinish;
+        board.OnBlockScreen += (isBlockActive) => screenBlock.SetActive(isBlockActive);
 
         UpdateStartScreen();
     }
@@ -71,7 +67,9 @@ public class LuckySnapCapController : MonoBehaviour
         levelsScreen.SetActive(false);
         playScreen.SetActive(true);
 
-        foreach (var visualizator in visualizators) visualizator.Number = Random.Range(1, 5);
+        board.gameObject.SetActive(true);
+        pointsConnector.gameObject.SetActive(true);
+        board.StartGame();
 
         endScreen.SetActive(false);
 
@@ -127,6 +125,9 @@ public class LuckySnapCapController : MonoBehaviour
 
     public void BackToMenu()
     {
+        board.gameObject.SetActive(false);
+        pointsConnector.gameObject.SetActive(false);
+
         startScreen.SetActive(true);
         playScreen.SetActive(false);
 
@@ -141,37 +142,27 @@ public class LuckySnapCapController : MonoBehaviour
         StartGame();
     }
 
-    private void OnSequenceFinish()
+    private void OnLineFinish(int length)
     {
-        if(PointVisualizator.selected.Count < 2)
-        {
-            HideDirections();
-            return;
-        }
-
-        for (int i = 0; i < PointVisualizator.selected.Count - 1; i++)
-        {
-            PointVisualizator.selected[i].Number = Random.Range(1, 5);
-        }
-        PointVisualizator.selected[PointVisualizator.selected.Count - 1].Number = Random.Range(1, 5);
-
-        score += PointVisualizator.selected.Count;
+        score += length;
         moves--;
 
         scoreLable.text = (score + ScoreLast).ToString();
         movesLable.text = moves.ToString();
 
-        HideDirections();
-
         progressFill.fillAmount = 1f * score / targetForLevel;
 
-        if(score >= targetForLevel)
+        if (score >= targetForLevel)
         {
             ShowResult(true);
         }
-        else if(moves == 0)
+        else if (moves == 0)
         {
             ShowResult(false);
+        }
+        else
+        {
+            SoundController.Instance.Right();
         }
     }
 
@@ -212,12 +203,6 @@ public class LuckySnapCapController : MonoBehaviour
 
         endLevelLable.text = $"LEVEL: {currentLevel}";
         endScoreLable.text = ScoreLast.ToString();
-    }
-
-    private void HideDirections()
-    {
-        PointVisualizator.selected.Clear();
-        foreach (var visualizator in visualizators) visualizator.SetDirection(false);
     }
 
     private void UpdateStartScreen()

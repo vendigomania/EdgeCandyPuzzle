@@ -5,6 +5,7 @@ using UnityEngine;
 public class SoundController : MonoBehaviour
 {
     [SerializeField] private AudioSource click;
+    [SerializeField] private AudioSource right;
     [SerializeField] private AudioSource win;
     [SerializeField] private AudioSource lose;
 
@@ -19,6 +20,11 @@ public class SoundController : MonoBehaviour
     public void Click()
     {
         if (enabled) click.Play();
+    }
+
+    public void Right()
+    {
+        if (enabled) right.Play();
     }
 
     public void Win()
